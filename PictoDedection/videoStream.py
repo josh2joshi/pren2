@@ -1,4 +1,5 @@
 import sys
+
 sys.path.append('/home/pi/newPren')
 import cv2 as cv
 from picamera import PiCamera
@@ -8,8 +9,10 @@ import time
 from adjustBrightness import adjustBrightness
 import pickle
 from Ann.Ann import Ann
+from Ann.ConvertToAnnInput import convertSizeForAnn
 
 from FindObjects import findObjects
+from ClassifyObjects import clasifyObject
 
 # from Ann.ConvertToAnnInput import convertSizeForAnn
 
@@ -43,21 +46,24 @@ for frame in camera.capture_continuous(rawCapture, format="rgb", use_video_port=
     image = adjustBrightness(image, FILTERWINDOWSIZE)
 
     detectedObjects = findObjects(image, SMIN, WHRATIO, THRESHOLD, SERACH, PADDING, NPIK)
-    objectImiages = []
+
+    annInputs = []
     counter = counter + 10
     for i, o in enumerate(detectedObjects):
-        cv.rectangle(image, (o[0], o[1]), (o[2], o[3]), (0, 0, 0), 2)
         h = o[3] - o[1] + 1
         w = o[2] - o[0] + 1
         cropImg = image[o[1]:o[1] + h, o[0]:o[0] + w]
-        scaledImg = cv.resize(cropImg, SCALESIZE)
-        # cv.imwrite(f'croppedImmages/object{counter}.png', 255 * scaledImg)
         counter = counter + 1
-        # objectImiages.append(cropImg)
+        annInputs.append(convertSizeForAnn(cropImg, SCALESIZE))
+    classNames = []
+    for i, input in enumerate(annInputs):
+        objectClass, precent, precentR = clasifyObject(ann, input)
+        classNames.append((objectClass, precent * 100, precentR * 100))
 
-    # annInputs = []
-    # for i, o in enumerate(objectImiages):
-    #     convertSizeForAnn(o, SCALESIZE)
+    for i, o in enumerate(detectedObjects):
+        cv.rectangle(image, (o[0], o[1]), (o[2], o[3]), (0, 0, 0), 2)
+        stringName = classNames[i][0] +" "+ str(classNames[i][1]) +" "+ str(classNames[i][2])
+        cv.putText(image, stringName, (o[0], o[1] + 20), cv.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2)
 
     cv.imshow("Frame", image)
 
