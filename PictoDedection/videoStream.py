@@ -1,11 +1,21 @@
+import sys
+sys.path.append('/home/pi/newPren')
 import cv2 as cv
 from picamera import PiCamera
 from picamera.array import PiRGBArray
 import numpy as np
 import time
 from adjustBrightness import adjustBrightness
+import pickle
+from Ann.Ann import Ann
 
 from FindObjects import findObjects
+
+# from Ann.ConvertToAnnInput import convertSizeForAnn
+
+annLocation = open("../Ann/ann.pickle", "rb")
+ann = pickle.load(annLocation)
+annLocation.close()
 
 RESOLUTION = (640, 480)
 FILTERWINDOWSIZE = (60, 60)
@@ -16,16 +26,15 @@ THRESHOLD = .35
 WHRATIO = 1.5
 SMIN = (40, 40)
 
+SCALESIZE = (10, 10)
+
 camera = PiCamera()
 camera.resolution = RESOLUTION
 camera.framerate = 32
 rawCapture = PiRGBArray(camera, size=RESOLUTION)
 
 time.sleep(0.1)
-
-
-
-
+counter = 0
 for frame in camera.capture_continuous(rawCapture, format="rgb", use_video_port=True):
     image = frame.array
 
@@ -33,10 +42,22 @@ for frame in camera.capture_continuous(rawCapture, format="rgb", use_video_port=
     image = np.float32(image * 1.0 / 255.0)
     image = adjustBrightness(image, FILTERWINDOWSIZE)
 
-    detectedObjects = findObjects(image,SMIN,WHRATIO,THRESHOLD,SERACH,PADDING,NPIK)
+    detectedObjects = findObjects(image, SMIN, WHRATIO, THRESHOLD, SERACH, PADDING, NPIK)
+    objectImiages = []
+    counter = counter + 10
+    for i, o in enumerate(detectedObjects):
+        cv.rectangle(image, (o[0], o[1]), (o[2], o[3]), (0, 0, 0), 2)
+        h = o[3] - o[1] + 1
+        w = o[2] - o[0] + 1
+        cropImg = image[o[1]:o[1] + h, o[0]:o[0] + w]
+        scaledImg = cv.resize(cropImg, SCALESIZE)
+        # cv.imwrite(f'croppedImmages/object{counter}.png', 255 * scaledImg)
+        counter = counter + 1
+        # objectImiages.append(cropImg)
 
-    for o in detectedObjects:
-        cv.rectangle(image,(o[0],o[1]),(o[2],o[3]),(0,0,0),2)
+    # annInputs = []
+    # for i, o in enumerate(objectImiages):
+    #     convertSizeForAnn(o, SCALESIZE)
 
     cv.imshow("Frame", image)
 
