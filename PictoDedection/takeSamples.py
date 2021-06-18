@@ -1,4 +1,5 @@
 import sys
+
 sys.path.append('/home/pi/newPren')
 import cv2 as cv
 from picamera import PiCamera
@@ -7,7 +8,6 @@ import numpy as np
 import time
 from adjustBrightness import adjustBrightness
 from FindObjects import findObjects
-
 
 RESOLUTION = (640, 480)
 FILTERWINDOWSIZE = (60, 60)
@@ -26,31 +26,36 @@ camera.framerate = 32
 rawCapture = PiRGBArray(camera, size=RESOLUTION)
 
 time.sleep(0.1)
-counter = 0
+objectImages = []
 for frame in camera.capture_continuous(rawCapture, format="rgb", use_video_port=True):
     image = frame.array
 
     image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
     image = np.float32(image * 1.0 / 255.0)
     image = adjustBrightness(image, FILTERWINDOWSIZE)
+    key = cv.waitKey(1) & 0xFF
+    if key == ord(" "):
+        detectedObjects = findObjects(image, SMIN, WHRATIO, THRESHOLD, SERACH, PADDING, NPIK)
 
-    detectedObjects = findObjects(image, SMIN, WHRATIO, THRESHOLD, SERACH, PADDING, NPIK)
-    annInputs = []
-    counter = counter + 10
-    for i, o in enumerate(detectedObjects):
-        cv.rectangle(image, (o[0], o[1]), (o[2], o[3]), (0, 0, 0), 2)
-        h = o[3] - o[1] + 1
-        w = o[2] - o[0] + 1
-        cropImg = image[o[1]:o[1] + h, o[0]:o[0] + w]
-        cv.imwrite(f'croppedImmages/object{counter}.png', 255 * cropImg)
-
+        for i, o in enumerate(detectedObjects):
+            h = o[3] - o[1] + 1
+            w = o[2] - o[0] + 1
+            cropImg = image[o[1]:o[1] + h, o[0]:o[0] + w]
+            objectImages.append(cropImg)
+            print("toke a Picture")
+        # cv.imwrite(f'croppedImmages/object{counter}.png', 255 * cropImg)
 
     cv.imshow("Frame", image)
 
     rawCapture.truncate(0)
-    key = cv.waitKey(1) & 0xFF
+
     if key == ord("q"):
         break
 
+
+
 cv.destroyAllWindows()
+print("save " + str(len(objectImages)) + " Images...")
+for i, o in enumerate(objectImages):
+    cv.imwrite(f'croppedImmages/objectDark{i}.png', 255 * o)
 print("Done")

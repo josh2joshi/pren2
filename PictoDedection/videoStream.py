@@ -29,7 +29,7 @@ THRESHOLD = .35
 WHRATIO = 1.5
 SMIN = (40, 40)
 
-SCALESIZE = (10, 10)
+SCALESIZE = (8, 8)
 
 camera = PiCamera()
 camera.resolution = RESOLUTION

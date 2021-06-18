@@ -5,18 +5,18 @@ import matplotlib.pyplot as plt
 import pickle
 from matplotlib.animation import FuncAnimation
 from Ann.Ann import Ann
-
+import time
 
 from Ann.ConvertToAnnInput import convertSizeForAnn
 from Ann.annForward import annForward
 
-SCALESIZE = (10, 10)
+SCALESIZE = (8, 8)
 CLASSES = ['bucket', 'hammer', 'pen', 'ruler', 'taco', 'wrench']
 NCLASS = 'nothing'
-NUMBEROFNODES = [SCALESIZE[0] * SCALESIZE[1], 10, 10]
+NUMBEROFNODES = [SCALESIZE[0] * SCALESIZE[1], 20, 15]
 NUMBEROFLAYERS = len(NUMBEROFNODES)
 DEFAULTPATH = 'Learn'
-NRUNS = 50
+NRUNS = 50000
 ALPHA = .8
 
 x = 0
@@ -54,7 +54,11 @@ changeW = w.copy()
 totalCost = np.zeros((1, NRUNS))
 totalCost = totalCost.flatten()
 desired = np.zeros((1, len(CLASSES)))
+startTime = time.time()
 for i, o in enumerate(totalCost):
+    # if i % NDEBUG == 0:
+    #     print(i)
+
     for j, c in enumerate(changeB):
         changeB[j] = changeB[j] * 0
         changeW[j] = changeW[j] * 0
@@ -90,9 +94,12 @@ for i, o in enumerate(totalCost):
         b[n] = b[n] - ALPHA * totalCost[i] / totalTrained * changeB[n]
         w[n] = w[n] - ALPHA * totalCost[i] / totalTrained * changeW[n]
 
+endTime = time.time()
+print((endTime - startTime))
+
 updated_x = list(range(0, NRUNS))
 updated_y = np.array(y).flatten()
-plt.plot(updated_x, updated_y)
+plt.semilogy(updated_x, updated_y)
 plt.draw()
 x = updated_x
 y = updated_y
@@ -109,8 +116,9 @@ ann.b = b
 ann.w = w
 ann.n = n
 ann.nClass = NCLASS
+print(ann.fomalscore)
 
 annLocation = open("../Ann/ann.pickle", "wb")
-pickle.dump(ann,annLocation)
+pickle.dump(ann, annLocation)
 
 annLocation.close()
