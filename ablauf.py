@@ -7,6 +7,7 @@ ser = serial.Serial(port=port, baudrate=57600, timeout=1, write_timeout=5)
 ser.flushInput()
 
 
+
 def readLine():
     read = ser.readline()
     decoded = read.decode('utf-8')
@@ -53,8 +54,31 @@ def main():
     sendCommand(command)
     print(readLine())
 
-    # spring()
+    searchPictogram()
+    spring()
+    setcamtop()
+    searchpictogramtop()
 
+
+def searchPictogram():
+    turn = 0
+    picFound = objectdetectionbottom()
+    while picFound < 1:
+        if picFound < 1:
+            command = "Mot Angle 30, 10\n"
+            sendcommand = command.encode('utf-8')
+            ser.write(sendcommand)
+            turn = turn + 1
+            time.sleep(1)
+        else:
+            picFound = 1
+    while turn > 0:
+        command = "Mot Angle -30, 10\n"
+        sendcommand = command.encode('utf-8')
+        ser.write(sendcommand)
+        turn = turn - 1
+        time.sleep(1)
+    positionbottom()
 
 def objectdetectionbottom():
     # object Detection Code
@@ -62,18 +86,67 @@ def objectdetectionbottom():
 
     return pictogramfound
 
+def positionbottom():
+    import sys
+    sys.path.append("./StairDedection")
+    import StairDetectionForRaspi
+
+    positionTreppe = dedectStair()
+    if positionTreppe == -1:
+        print("ERROR TREPPE NICHT GEFUNDEN")
+    elif positionTreppe == 0:
+        while positionTreppe == 0:
+            command = "Mot Angle 90, 10\n"
+            sendcommand = command.encode('utf-8')
+            ser.write(sendcommand)
+            time.sleep(1)
+            command = "Mot Dis 50,10\n"
+            sendcommand = command.encode('utf-8')
+            ser.write(sendcommand)
+            time.sleep(2)
+            command = "Mot Angle -90, 10\n"
+            sendcommand = command.encode('utf-8')
+            ser.write(sendcommand)
+            time.sleep(1)
+            positionTreppe = dedectStair()
+    else:
+        while positionTreppe == 1:
+            command = "Mot Angle -90, 10\n"
+            sendcommand = command.encode('utf-8')
+            ser.write(sendcommand)
+            time.sleep(1)
+            command = "Mot Dis 50,10\n"
+            sendcommand = command.encode('utf-8')
+            ser.write(sendcommand)
+            time.sleep(2)
+            command = "Mot Angle 90, 10\n"
+            sendcommand = command.encode('utf-8')
+            ser.write(sendcommand)
+            time.sleep(1)
+            positionTreppe = dedectStair()
+    distancefront = getdistancefront()
+    while distancefront > 100:
+        command = "Mot Dis 50,10\n"
+        sendcommand = command.encode('utf-8')
+        ser.write(sendcommand)
+        time.sleep(2)
+        distancefront = getdistancefront()
+    command = "Mot Dis -500,10\n"
+    sendcommand = command.encode('utf-8')
+    ser.write(sendcommand)
+    time.sleep(10)
+    return
 
 def spring():
     command = "Servo SetTrigger 90\n"
-    sendCommand(command)
+    sendcommand = command.encode('utf-8')
+    ser.write(sendcommand)
+    time.sleep(10)
 
-    # just testings
-    command = "Servo GetTrigger\n"
-    sendCommand(command)
 
     print("Trigger Position: ", readLine())
-
     return
+
 
 
 def setcamtop():
@@ -96,7 +169,7 @@ def setcamtop():
         sendcommand = command.encode('utf-8')
         ser.write(sendcommand)
         print("cam nach unten setzen")
-
+    time.sleep(1)
     return
 
 
@@ -108,16 +181,13 @@ def objectdetectiontop():
 
 def searchpictogramtop():
     pictogramfound = objectdetectiontop()
-    pictogramfound = 0
-    while pictogramfound < 2:
+    while pictogramfound == 0:
         command = "Mot Angle 30, 10\n"
         sendcommand = command.encode('utf-8')
         ser.write(sendcommand)
         time.sleep(1)
-        pictogramfound = pictogramfound + 1
+        pictogramfound = objectdetectiontop()
         print("motor hat sich gedreht")
-
-        # pictogramfound = objectdetectiontop()
 
     distancefront = getdistancefront()
 
