@@ -2,10 +2,8 @@ import random
 import cv2 as cv
 import numpy as np
 import math as math
-from picamera import PiCamera
-from picamera.array import PiRGBArray
+import initCamera
 
-RESOLUTION = (640, 480)
 DEGREEBUCKET = 1
 OFFSETBUCKET = 10
 STAIRLINESCOUNT = 10
@@ -34,10 +32,6 @@ class Line:
             self.degree = 90
 
 
-camera = PiCamera()
-camera.resolution = RESOLUTION
-camera.framerate = 16
-rawCapture = PiRGBArray(camera, size=RESOLUTION)
 i = 0
 
 
@@ -45,7 +39,8 @@ def dedectStair():
     position = -1
     global i
     i = i + 1
-    image = camera.capture(f'../debuge/stairdedection/foo{i}.png')
+    initCamera.camera.capture(initCamera.rawCapture, format="rgb")
+    image = initCamera.rawCapture.array
     image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
     image = cv.GaussianBlur(image, (3, 3), 0)
     sigma = np.std(image)

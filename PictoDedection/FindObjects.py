@@ -1,7 +1,7 @@
 import numpy as np
 import cv2 as cv
 
-from FindObject import findObject
+from .FindObject import findObject
 
 
 def findObjects(img, minimumsize, whratio, threshold, filtersize, padding, maximumnumber):

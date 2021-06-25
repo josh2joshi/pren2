@@ -1,8 +1,15 @@
 import serial
 import time
+import sys
+
+
+sys.path.append('/home/pi/newPren')
+sys.path.append("./StairDetection")
+from StairDedection.StairDetectionForRaspi import dedectStair
+from PictoDedection.PictoDedectionForRaspi import pictoDedection
 
 # port = "COM3"
-port = "/dev/ttyACM1"  # USB2
+port = "/dev/ttyACM0"  # USB2
 ser = serial.Serial(port=port, baudrate=57600, timeout=1, write_timeout=5)
 ser.flushInput()
 
@@ -62,22 +69,19 @@ def main():
 
 def searchPictogram():
     turn = 0
-    picFound = objectdetectionbottom()
+    picFound = pictoDedection()
     while picFound < 1:
+        print("turning!!!!!!!!!!")
         if picFound < 1:
             command = "Mot Angle 30, 10\n"
-            sendcommand = command.encode('utf-8')
-            ser.write(sendcommand)
+            sendCommand(command)
             turn = turn + 1
-            time.sleep(1)
         else:
             picFound = 1
     while turn > 0:
         command = "Mot Angle -30, 10\n"
-        sendcommand = command.encode('utf-8')
-        ser.write(sendcommand)
+        sendCommand(command)
         turn = turn - 1
-        time.sleep(1)
     positionbottom()
 
 def objectdetectionbottom():
@@ -87,10 +91,6 @@ def objectdetectionbottom():
     return pictogramfound
 
 def positionbottom():
-    import sys
-    sys.path.append("./StairDedection")
-    import StairDetectionForRaspi
-
     positionTreppe = dedectStair()
     if positionTreppe == -1:
         print("ERROR TREPPE NICHT GEFUNDEN")
