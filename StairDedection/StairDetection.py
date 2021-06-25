@@ -9,7 +9,7 @@ from picamera.array import PiRGBArray
 RESOLUTION = (640, 480)
 DEGREEBUCKET = 1
 OFFSETBUCKET = 10
-STAIRLINESCOUNT = 1
+STAIRLINESCOUNT = 10
 
 
 
@@ -103,6 +103,7 @@ for frame in camera.capture_continuous(rawCapture, format="rgb", use_video_port=
         cv.line(imgColor, (newLine.x1, newLine.y1), (newLine.x2, newLine.y2), (255, 0, 0), 1, cv.LINE_AA)
 
     if len(newLines) >= STAIRLINESCOUNT:
+        print(len(newLines))
         degrees = []
         for newLine in newLines:
             # print(newLine.degree)
@@ -112,8 +113,8 @@ for frame in camera.capture_continuous(rawCapture, format="rgb", use_video_port=
             print("We are Left")
         elif degreeMedian > 0:
             print("We are Right")
-
-        print("Stair Dedected!!")
+    else:
+        print("No Stair Dedected!!")
         # print(newLine[0].offset)
 
     cv.imshow("Frame", imgColor)
