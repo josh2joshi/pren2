@@ -1,19 +1,12 @@
 import serial
 import time
-import sys
-
-
-sys.path.append('/home/pi/newPren')
-sys.path.append("./StairDetection")
-from StairDedection.StairDetectionForRaspi import dedectStair
-from PictoDedection.PictoDedectionForRaspi import pictoDedection
 
 # port = "COM3"
-port = "/dev/ttyACM0"  # USB2
+port = "/dev/ttyACM1"  # USB2
 ser = serial.Serial(port=port, baudrate=57600, timeout=1, write_timeout=5)
 ser.flushInput()
-
 image = ""
+
 
 
 def readLine():
@@ -70,20 +63,22 @@ def main():
 
 def searchPictogram():
     turn = 0
-    picFound = pictoDedection()
+    picFound = objectdetectionbottom()
     while picFound == "NOPIC":
-        print("turning!!!!!!!!!!")
         command = "Mot Angle 30, 10\n"
-        sendCommand(command)
+        sendcommand = command.encode('utf-8')
+        ser.write(sendcommand)
         turn = turn + 1
-        picFound = pictoDedection()
+        time.sleep(1)
+        picFound = objectdetectionbottom()
 
     image = picFound
-
     while turn > 0:
         command = "Mot Angle -30, 10\n"
-        sendCommand(command)
+        sendcommand = command.encode('utf-8')
+        ser.write(sendcommand)
         turn = turn - 1
+        time.sleep(1)
     positionbottom()
 
 def objectdetectionbottom():
@@ -93,43 +88,60 @@ def objectdetectionbottom():
     return pictogramfound
 
 def positionbottom():
+    import sys
+    sys.path.append("./StairDedection")
+    import StairDetectionForRaspi
+
     positionTreppe = dedectStair()
     if positionTreppe == -1:
         print("ERROR TREPPE NICHT GEFUNDEN")
     elif positionTreppe == 0:
         while positionTreppe == 0:
             command = "Mot Angle 90, 10\n"
-            sendCommand(command)
+            sendcommand = command.encode('utf-8')
+            ser.write(sendcommand)
+            time.sleep(1)
             command = "Mot Dis 50,10\n"
-            sendCommand(command)
+            sendcommand = command.encode('utf-8')
+            ser.write(sendcommand)
             time.sleep(2)
             command = "Mot Angle -90, 10\n"
-            sendCommand(command)
+            sendcommand = command.encode('utf-8')
+            ser.write(sendcommand)
+            time.sleep(1)
             positionTreppe = dedectStair()
     else:
         while positionTreppe == 1:
             command = "Mot Angle -90, 10\n"
-            sendCommand(command)
+            sendcommand = command.encode('utf-8')
+            ser.write(sendcommand)
+            time.sleep(1)
             command = "Mot Dis 50,10\n"
-            sendCommand(command)
+            sendcommand = command.encode('utf-8')
+            ser.write(sendcommand)
             time.sleep(2)
             command = "Mot Angle 90, 10\n"
-            sendCommand(command)
+            sendcommand = command.encode('utf-8')
+            ser.write(sendcommand)
+            time.sleep(1)
             positionTreppe = dedectStair()
     distancefront = getdistancefront()
     while distancefront > 100:
         command = "Mot Dis 50,10\n"
-        sendCommand(command)
+        sendcommand = command.encode('utf-8')
+        ser.write(sendcommand)
         time.sleep(2)
         distancefront = getdistancefront()
     command = "Mot Dis -500,10\n"
-    sendCommand(command)
+    sendcommand = command.encode('utf-8')
+    ser.write(sendcommand)
     time.sleep(10)
     return
 
 def spring():
     command = "Servo SetTrigger 90\n"
-    sendCommand(command)
+    sendcommand = command.encode('utf-8')
+    ser.write(sendcommand)
     time.sleep(10)
 
 
@@ -172,7 +184,9 @@ def searchpictogramtop():
     pictogramfound = objectdetectiontop()
     while pictogramfound != image:
         command = "Mot Angle 30, 10\n"
-        sendCommand(command)
+        sendcommand = command.encode('utf-8')
+        ser.write(sendcommand)
+        time.sleep(1)
         pictogramfound = objectdetectiontop()
         print("motor hat sich gedreht")
 
@@ -180,13 +194,15 @@ def searchpictogramtop():
 
     while distancefront > 60:
         command = "Mot Dis 20,10\n"
-        sendCommand(command)
+        sendcommand = command.encode('utf-8')
+        ser.write(sendcommand)
         time.sleep(2)
         print("fährt vorwärts")
         distancefront = getdistancefront()
 
     command = "led set 1\n"
-    sendCommand(command)
+    sendcommand = command.encode('utf-8')
+    ser.write(sendcommand)
     print("led läuchtet hell yea >.<")
 
     return
